@@ -1,0 +1,56 @@
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<th:block th:fragment="navbar-custom">
+
+    <div class="container-fluid">
+        <ul class="list-unstyled topnav-menu float-right mb-0">
+
+            <li class="dropdown notification-list">
+                <!-- Mobile menu toggle-->
+                <a class="navbar-toggle nav-link">
+                    <div class="lines">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                </a>
+                <!-- End mobile menu toggle-->
+            </li>
+
+            <li class="dropdown notification-list">
+                <a class="nav-link dropdown-toggle nav-user mr-0 waves-effect waves-light" data-toggle="dropdown"
+                   href="#"
+                   role="button" aria-haspopup="false" aria-expanded="false">
+                    <img src="/assets/images/avatar-cat.jpg" alt="user-image" class="rounded-circle">
+                </a>
+                <div class="dropdown-menu dropdown-menu-right profile-dropdown ">
+                    <!-- item-->
+                    <a href="javascript:void(0);" class="dropdown-item notify-item">
+                        <i class="fa-regular fa-user"></i>
+                        <span>Profile</span>
+                    </a>
+
+                    <div class="dropdown-divider"></div>
+
+                    <!-- item-->
+                    <a href="/logout" class="dropdown-item notify-item">
+                        <i class="fa-solid fa-person-running"></i>
+                        <span>Logout</span>
+                    </a>
+
+                </div>
+            </li>
+
+        </ul>
+
+        <!-- LOGO -->
+        <div class="logo-box">
+            <a href="/users" class="logo text-center">
+            <span class="logo-lg">
+                <img src="/assets/images/coffee-logo.png" alt="" height="50">
+            </span>
+            </a>
+        </div>
+
+        <div class="clearfix"></div>
+    </div>
+</th:block>

@@ -1,0 +1,612 @@
+﻿<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <title>Admin Dashboard</title>
+    <th:block th:replace="/layout/dashboard/head :: head"/>
+</head>
+<body data-layout="horizontal">
+<div id="wrapper">
+    <header id="topnav">
+        <div class="navbar-custom" th:insert="/layout/dashboard/navbar-custom :: navbar-custom"></div>
+        <div class="topbar-menu" th:insert="/layout/dashboard/topbar-menu :: topbar-menu"></div>
+    </header>
+
+    <!-- ============================================================== -->
+    <!-- PAGE CONTENT -->
+    <!-- ============================================================== -->
+
+    <div class="content-page">
+        <div class="content">
+
+            <!-- PAGE TITLE -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="page-title-box">
+                        <h4 class="page-title">Users</h4>
+                    </div>
+                </div>
+            </div>
+            <!-- END PAGE TITLE -->
+
+            <div class="row">
+                <div class="col-sm-12">
+                    <div class="card-box table-responsive">
+                        <div class="row">
+                            <div class="col-10">
+                                <h4 class="header-title"><b>All Users</b></h4>
+                                <p class="sub-header">
+                                    This list includes all users including blocked ones.
+                                    Only authorized users can interact with these data.
+                                </p>
+                            </div>
+
+                            <div class="col-2">
+                                <div style="color: #FFFFFF; float: right">
+                                    <button class="btn btn-primary waves-effect width-md waves-light"
+                                            id="btnMdCreateUser">
+                                        <i class="fa-solid fa-plus"></i>
+                                        Add user
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <table id="datatable-keytable" class="table table-bordered dt-responsive nowrap"
+                               style="border-collapse: collapse; border-spacing: 0; width: 100%;">
+                            <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Username</th>
+                                <th>Email</th>
+                                <th>Address</th>
+                                <th>Phone</th>
+                                <th>Role</th>
+                                <th>Status</th>
+                                <th class="text-center" id="action">Action</th>
+                            </tr>
+                            </thead>
+
+                            <tbody id="tb-userlist">
+
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        <!-- end content -->
+
+        <footer class="footer" th:insert="/layout/dashboard/footer :: footer">
+        </footer>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- END PAGE CONTENT -->
+    <!-- ============================================================== -->
+
+</div>
+
+<th:block th:replace="/layout/dashboard/modals :: modal_create_user"/>
+<th:block th:replace="/layout/dashboard/modals :: modal_edit_user"/>
+
+<th:block th:replace="/layout/dashboard/script :: script"/>
+
+<script>
+    let page = {
+        urls: {
+            findAllUsers: App.BASE_URL_DASHBOARD + "/users",
+            findOneUser: App.BASE_URL_DASHBOARD + "/user/",
+            createUser: App.BASE_URL_DASHBOARD + "/user/create",
+            editUser: App.BASE_URL_DASHBOARD + "/user/edit/",
+            blockUser: App.BASE_URL_DASHBOARD + "/user/block/",
+            unblockUser: App.BASE_URL_DASHBOARD + "/user/unblock/",
+        },
+        element: {},
+        commands: {},
+        dialogs: {
+            element: {},
+            alertDanger: {},
+            inputError: {}
+        }
+    }
+
+    page.element.tbBodyUser = $("#tb-userlist");
+
+    page.element.btnShowCreateUserFrm = $("#btnMdCreateUser");
+
+    page.dialogs.element.mdCreateUser = $("#mdCreateUser");
+    page.dialogs.element.mdEditUser = $("#mdEditUser");
+
+    page.dialogs.element.frmCreateUser = $("#frmCreateUser");
+    page.dialogs.element.usernameCreate = $("#usernameCreate");
+    page.dialogs.element.passwordCreate = $("#passwordCreate");
+    page.dialogs.element.roleCreate = $("#roleCreate");
+    page.dialogs.element.emailCreate = $("#emailCreate");
+    page.dialogs.element.phoneCreate = $("#phoneCreate");
+    page.dialogs.element.addressCreate = $("#addressCreate");
+
+    page.dialogs.element.frmEditUser = $("#frmEditUser");
+    page.dialogs.element.usernameEdit = $("#usernameEdit");
+    page.dialogs.element.passwordEdit = $("#passwordEdit");
+    page.dialogs.element.roleEdit = $("#roleEdit");
+    page.dialogs.element.emailEdit = $("#emailEdit");
+    page.dialogs.element.phoneEdit = $("#phoneEdit");
+    page.dialogs.element.addressEdit = $("#addressEdit");
+
+    page.dialogs.element.btnCreateUser = $("#btnCreateUser");
+    page.dialogs.element.btnSaveUser = $("#btnSaveUser");
+
+    page.dialogs.alertDanger.mdCreateUser = $("#mdCreateUser .modal-body .modal-alert-danger");
+    page.dialogs.alertDanger.mdEditUser = $("#mdEditUser .modal-body .modal-alert-danger");
+
+    page.dialogs.inputError.frmCreateUser = $("#frmCreateUser input.error")
+    page.dialogs.inputError.frmEditUser = $("#frmEditUser input.error")
+
+    let user = new User();
+    let role = new Role();
+
+    function renderUsers() {
+        $.ajax({
+            "type": "GET",
+            "url": page.urls.findAllUsers
+        })
+            .done((data) => {
+                data.forEach(item => {
+                    user = item;
+                    prependRow();
+                })
+
+                handleBtn();
+            })
+    }
+
+    // open modal
+    function handleCreateUser() {
+        page.element.btnShowCreateUserFrm.on("click", function () {
+            page.dialogs.element.mdCreateUser.modal("show");
+        })
+    }
+
+    function handleEditUser() {
+        $(".btnEdit").on("click", function () {
+            let id = $(this).data("id");
+
+            selectUser(id).then(function () {
+                page.dialogs.element.usernameEdit.val(user.username);
+                page.dialogs.element.roleEdit.val(user.role.id);
+                page.dialogs.element.emailEdit.val(user.email);
+                page.dialogs.element.phoneEdit.val(user.phone);
+                page.dialogs.element.addressEdit.val(user.address);
+            })
+
+            page.dialogs.element.mdEditUser.modal("show");
+        })
+    }
+
+    function handleBlockUser() {
+        $(".btnBlockUser").on("click", function () {
+            let id = $(this).data("id");
+
+            selectUser(id).then(function () {
+                App.SweetAlert.showBlockConfirmDialog()
+                    .then((result) => {
+                        if (result.isConfirmed)
+                            doBlock();
+                    });
+            })
+        })
+    }
+
+    function handleUnblockUser() {
+        $(".btnUnblockUser").on("click", function () {
+            let id = $(this).data("id");
+
+            selectUser(id).then(function () {
+                App.SweetAlert.showUnblockConfirmDialog()
+                    .then((result) => {
+                        if (result.isConfirmed)
+                            doUnblock();
+                    });
+            })
+        })
+    }
+
+    function handleBtn() {
+        handleEditUser();
+        handleBlockUser();
+        handleUnblockUser();
+    }
+
+    // reset modal
+    page.dialogs.element.mdCreateUser.on("hidden.bs.modal", function () {
+        page.dialogs.element.frmCreateUser[0].reset();
+        createUserValidator.resetForm();
+        page.dialogs.alertDanger.mdCreateUser.removeClass("show").addClass("hide");
+        $("#mdCreateUser input").removeClass("error");
+    })
+
+    page.dialogs.element.mdEditUser.on("hidden.bs.modal", function () {
+        page.dialogs.element.frmEditUser[0].reset();
+        editUserValidator.resetForm();
+        page.dialogs.alertDanger.mdEditUser.removeClass("show").addClass("hide");
+        $("#mdEditUser input").removeClass("error");
+    })
+
+    // action
+    page.dialogs.element.btnCreateUser.on("click", function () {
+        page.dialogs.element.frmCreateUser.submit();
+    })
+
+    function doCreate() {
+        delete user.id;
+        user.username = page.dialogs.element.usernameCreate.val();
+        user.password = page.dialogs.element.passwordCreate.val();
+        user.email = page.dialogs.element.emailCreate.val();
+        user.phone = page.dialogs.element.phoneCreate.val();
+        user.address = page.dialogs.element.addressCreate.val();
+
+        role.id = page.dialogs.element.roleCreate.val();
+        user.role = role;
+
+        $.ajax({
+            "headers": {
+                "accept": "application/json",
+                "content-type": "application/json"
+            },
+            "type": "POST",
+            "url": page.urls.createUser,
+            "data": JSON.stringify(user)
+        })
+            .done((data) => {
+                user = data;
+                prependRow();
+
+                page.dialogs.element.frmCreateUser[0].reset();
+                page.dialogs.element.mdCreateUser.modal("hide");
+                handleBtn();
+                App.SweetAlert.showSuccessAlert(App.SUCCESS_CREATED);
+            })
+            .fail(function (jqXHR) {
+                handleFailedTasks(jqXHR, "Create");
+            })
+    }
+
+    page.dialogs.element.btnSaveUser.on("click", function () {
+        page.dialogs.element.frmEditUser.submit();
+    })
+
+    function doEdit() {
+        user.username = page.dialogs.element.usernameEdit.val();
+        user.email = page.dialogs.element.emailEdit.val();
+        user.phone = page.dialogs.element.phoneEdit.val();
+        user.address = page.dialogs.element.addressEdit.val();
+        user.password = "encoded";
+
+        role.id = page.dialogs.element.roleEdit.val();
+        user.role = role;
+
+        $.ajax({
+            "headers": {
+                "accept": "application/json",
+                "content-type": "application/json"
+            },
+            "type": "PATCH",
+            "url": page.urls.editUser + user.id,
+            "data": JSON.stringify(user)
+        })
+            .done((data) => {
+                user = data;
+                replaceRow();
+
+                page.dialogs.element.frmEditUser[0].reset();
+                page.dialogs.element.mdEditUser.modal("hide");
+                handleBtn();
+                App.SweetAlert.showSuccessAlert(App.SUCCESS_UPDATED);
+            })
+            .fail(function (jqXHR) {
+                handleFailedTasks(jqXHR, "Edit");
+            })
+    }
+
+    function doBlock() {
+        return $.ajax({
+            "headers": {
+                "accept": "application/json",
+                "content-type": "application/json"
+            },
+            "type": "PATCH",
+            "url": page.urls.blockUser + user.id,
+        })
+            .done((data) => {
+                user = data;
+                replaceRow();
+
+                handleBtn();
+                App.SweetAlert.showSuccessAlert("User blocked");
+            })
+            .fail((jqXHR) => {
+                handleFailedTasks(jqXHR, "Block");
+            })
+    }
+
+    function doUnblock() {
+        return $.ajax({
+            headers: {
+                "accept": "application/json",
+                "content-type": "application/json"
+            },
+            type: "PATCH",
+            url: page.urls.unblockUser + user.id,
+        })
+            .done((data) => {
+                user = data;
+                replaceRow();
+
+                handleBtn();
+                App.SweetAlert.showSuccessAlert("User unblocked");
+            })
+            .fail((jqXHR) => {
+                handleFailedTasks(jqXHR, "Block");
+            })
+    }
+
+    // validation
+    const createUserValidator = page.dialogs.element.frmCreateUser.validate({
+        onkeyup: function (element) {
+            $(element).valid()
+        },
+        onclick: false,
+        onfocusout: false,
+        rules: {
+            usernameCreate: {
+                required: true,
+                minlength: 5,
+                maxlength: 20
+            },
+            passwordCreate: {
+                required: true,
+                minlength: 5,
+                maxlength: 30,
+            },
+            roleCreate: {
+                required: true,
+                min: 1,
+                max: 2
+            },
+            emailCreate: {
+                required: false,
+                email: true
+            },
+            phoneCreate: {
+                required: false,
+                phoneRegex: true
+            }
+        },
+        messages: {
+            usernameCreate: {
+                required: "Username is required",
+                minlength: $.validator.format("Username must have at least {0} characters"),
+                maxlength: $.validator.format("Username must have at most {0} characters")
+            },
+            passwordCreate: {
+                required: "Password is required",
+                minlength: $.validator.format("Password must have at least {0} characters"),
+                maxlength: $.validator.format("Password must have at most {0} characters")
+            },
+            roleCreate: {
+                required: "Role is required",
+                min: "Role invalid",
+                max: "Role invalid"
+            },
+            emailCreate: {
+                email: "Wrong email format. Please follow this pattern: example@ex.com"
+            },
+            phoneCreate: {
+                phoneRegex: "Wrong phone format. Please follow this pattern: +91 (123) 456-7890"
+            }
+        },
+        errorLabelContainer: "#mdCreateUser .modal-body .modal-alert-danger",
+        errorPlacement: function (error, element) {
+            error.appendTo("#mdCreateUser .modal-body .modal-alert-danger");
+        },
+        showErrors: function (errorMap, errorList) {
+            if (this.numberOfInvalids() > 0) {
+                page.dialogs.alertDanger.mdCreateUser.removeClass("hide").addClass("show");
+            } else {
+                page.dialogs.alertDanger.mdCreateUser.removeClass("show").addClass("hide").empty();
+                page.dialogs.inputError.frmCreateUser.removeClass("error");
+            }
+            this.defaultShowErrors();
+        },
+        submitHandler: function () {
+            doCreate();
+        }
+    });
+
+    const editUserValidator = page.dialogs.element.frmEditUser.validate({
+        onkeyup: function (element) {
+            $(element).valid()
+        },
+        onclick: false,
+        onfocusout: false,
+        rules: {
+            usernameEdit: {
+                required: true,
+                minlength: 5,
+                maxlength: 20
+            },
+            roleEdit: {
+                required: true,
+                min: 1,
+                max: 2
+            },
+            emailEdit: {
+                required: false,
+                email: true
+            },
+            phoneEdit: {
+                required: true,
+                phoneRegex: true
+            }
+        },
+        messages: {
+            usernameEdit: {
+                required: "Username is required",
+                minlength: $.validator.format("Username must have at least {0} characters"),
+                maxlength: $.validator.format("Username must have at most {0} characters")
+            },
+            roleEdit: {
+                required: "Role is required",
+                min: "Role invalid",
+                max: "Role invalid"
+            },
+            emailEdit: {
+                email: "Wrong email format. Please follow this pattern: example@ex.com"
+            },
+            phoneEdit: {
+                phoneRegex: "Wrong phone format. Please follow this pattern: +91 (123) 456-7890"
+            }
+        },
+        errorLabelContainer: "#mdEditUser .modal-body .modal-alert-danger",
+        errorPlacement: function (error, element) {
+            error.appendTo("#mdEditUser .modal-body .modal-alert-danger");
+        },
+        showErrors: function (errorMap, errorList) {
+            if (this.numberOfInvalids() > 0) {
+                page.dialogs.alertDanger.mdEditUser.removeClass("hide").addClass("show");
+            } else {
+                page.dialogs.alertDanger.mdEditUser.removeClass("show").addClass("hide").empty();
+                page.dialogs.inputError.frmEditUser.removeClass("error");
+            }
+            this.defaultShowErrors();
+        },
+        submitHandler: function () {
+            doEdit();
+        }
+    })
+
+    // misc
+    function selectUser(id) {
+        return $.ajax({
+            type: "GET",
+            url: page.urls.findOneUser + id,
+        })
+            .done((data) => {
+                user = data;
+            })
+            .fail(() => {
+                App.IziToast.showErrorAlert(App.ERROR_404);
+            })
+    }
+
+    function prependRow() {
+        let str = `
+            <tr id="tr_${user.id}">
+                <td class="text-center">${user.id}</td>
+                <td>${user.username}</td>
+                <td>${(user.email == null) ? "(empty)" : user.email}</td>
+                <td>${(user.address == null) ? "(empty)" : user.address}</td>
+                <td>${(user.phone == null) ? "(empty)" : user.phone}</td>
+                <td class="text-center">${user.role.code}</td>
+                <td class="text-center">${(user.blocked) ? "Blocked" : "Active"}</td>
+                <td class="text-center">
+                    <btn data-id="${user.id}" class="btnEdit btn btn-outline-secondary waves-effect waves-light" title="Edit">
+                        <i class="fas fa-pen"></i>
+                    </btn>
+                    <a data-id="${user.id}" title="${(user.blocked) ? 'Block' : 'Unblock'}"
+                    class="${(user.blocked) ? 'btnUnblockUser' : 'btnBlockUser'} btn btn-outline-danger waves-effect waves-light">
+                       <i class="${(user.blocked) ? 'fas fa-unlock' : 'fas fa-lock'}"></i>
+                    </a>
+                </td>
+            </tr>`;
+
+        page.element.tbBodyUser.prepend(str);
+    }
+
+    function replaceRow() {
+        let targetRow = $('#tr_' + user.id);
+        let str = `
+            <tr id="tr_${user.id}">
+                <td class="text-center">${user.id}</td>
+                <td>${user.username}</td>
+                <td>${(user.email == null) ? "(empty)" : user.email}</td>
+                <td>${(user.address == null) ? "(empty)" : user.address}</td>
+                <td>${(user.phone == null) ? "(empty)" : user.phone}</td>
+                <td class="text-center">${user.role.code}</td>
+                <td class="text-center">${(user.blocked) ? "Blocked" : "Active"}</td>
+                <td class="text-center">
+                    <btn data-id="${user.id}" class="btnEdit btn btn-outline-secondary waves-effect waves-light" title="Edit">
+                        <i class="fas fa-pen"></i>
+                    </btn>
+                    <a data-id="${user.id}" title="${(user.blocked) ? 'Block' : 'Unblock'}"
+                    class="${(user.blocked) ? 'btnUnblockUser' : 'btnBlockUser'} btn btn-outline-danger waves-effect waves-light">
+                       <i class="${(user.blocked) ? 'fas fa-unlock' : 'fas fa-lock'}"></i>
+                    </a>
+                </td>
+            </tr>`;
+
+        targetRow.replaceWith(str);
+    }
+
+    $.validator.addMethod("phoneRegex", function (value, element) {
+            return this.optional(element) || /^(\+\d{1,2}\s)?\(?\d{3}\)?[\s.-]\d{3}[\s.-]\d{4}$/.test(value)
+        },
+        "Please use a valid number following this pattern: +91 (123) 456 7890"
+    );
+
+    function handleFailedTasks(jqXHR, modal) {
+        let str = ``;
+
+        if (jqXHR.status === 401) {
+            App.SweetAlert.showErrorAlert(App.ERROR_401);
+            setTimeout(() => {
+                location.href = "/logout";
+            }, 2000);
+
+        } else if (jqXHR.status === 403) {
+            App.SweetAlert.showErrorAlert(App.ERROR_403);
+
+        } else if (jqXHR.responseJSON) {
+            if (jqXHR.responseJSON.message) {
+                App.SweetAlert.showErrorAlert(jqXHR.responseJSON.message);
+
+            } else {
+                $.each(jqXHR.responseJSON, function (key, value) {
+                    str += `<label id="${key}-error" class="error" for="${key + modal}">${value}</label>`;
+                    $("#" + key).addClass("error");
+                });
+
+                // page.dialogs.alertDanger.mdCreateUser
+                $("#md" + modal + "User .modal-body .modal-alert-danger")
+                    .addClass('show')
+                    .append(str);
+            }
+
+        } else {
+            App.SweetAlert.showErrorAlert(App.ERROR_500);
+        }
+
+        // if (!jqXHR.responseJSON) {
+        //     App.IziToast.showErrorAlert(jqXHR.responseText);
+        // } else {
+        //     let str = ``;
+        //     $.each(jqXHR.responseJSON, (key, value) => {
+        //         str += `<label id=${key}Create-error class="error" for="${key}Create">${value}</label>`;
+        //         $("#" + key + "Create").addClass("error");
+        //     })
+        //
+        //     page.dialogs.alertDanger.mdCreateUser
+        //         .addClass('show')
+        //         .append(str);
+        // }
+    }
+
+    //initialization
+    renderUsers();
+
+    handleCreateUser();
+</script>
+</body>
+
+</html>

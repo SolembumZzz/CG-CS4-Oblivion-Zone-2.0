@@ -1,0 +1,216 @@
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<th:block th:fragment="modal_create_user">
+    <div id="mdCreateUser" class="modal" tabindex="-1" data-backdrop="static" data-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Create User</h5>
+                </div>
+                <div class="modal-body">
+
+                    <div class="modal-alert-danger hide">
+                    </div>
+
+                    <form class="mb-3" id="frmCreateUser">
+                        <div class="row mb-3">
+                            <div class="col-xl-4">
+                                <label for="usernameCreate">Username</label>
+                                <input type="text" id="usernameCreate" name="usernameCreate" class="form-control">
+                            </div>
+                            <div class="col-xl-3">
+                                <label for="roleCreate">Role</label>
+                                <select id="roleCreate" name="roleCreate" class="form-control">
+                                    <option value="1">ADMIN</option>
+                                    <option value="2">USER</option>
+                                </select>
+                            </div>
+                            <div class="col-xl-5">
+                                <label for="emailCreate">Email</label>
+                                <input type="email" id="emailCreate" name="emailCreate" class="form-control">
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-xl-4">
+                                <label for="passwordCreate">Password</label>
+                                <input type="password" id="passwordCreate" name="passwordCreate" class="form-control">
+                            </div>
+                            <div class="col-xl-4">
+                                <label for="phoneCreate">Phone</label>
+                                <input type="tel" id="phoneCreate" name="phoneCreate" class="form-control">
+                            </div>
+                            <div class="col-xl-4">
+                                <label for="addressCreate">Address</label>
+                                <input type="text" id="addressCreate" name="addressCreate" class="form-control">
+                            </div>
+                        </div>
+
+                    </form>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" id="btnCreateUser" class="btn btn-primary">Create</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</th:block>
+
+<th:block th:fragment="modal_edit_user">
+    <div id="mdEditUser" class="modal" tabindex="-1" data-backdrop="static" data-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit User</h5>
+                </div>
+                <div class="modal-body">
+
+                    <div class="modal-alert-danger hide">
+                    </div>
+
+                    <form class="mb-3" id="frmEditUser">
+                        <div class="row mb-3">
+                            <div class="col-xl-4">
+                                <label for="usernameEdit">Username</label>
+                                <input type="text" id="usernameEdit" name="usernameEdit" class="form-control">
+                            </div>
+                            <div class="col-xl-3">
+                                <label for="roleEdit">Role</label>
+                                <select id="roleEdit" name="roleEdit" class="form-control">
+                                    <option value="1">ADMIN</option>
+                                    <option value="2">USER</option>
+                                </select>
+                            </div>
+                            <div class="col-xl-5">
+                                <label for="emailEdit">Email</label>
+                                <input type="email" id="emailEdit" name="emailEdit" class="form-control">
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-xl-6">
+                                <label for="phoneEdit">Phone</label>
+                                <input type="tel" id="phoneEdit" name="phoneEdit" class="form-control">
+                            </div>
+                            <div class="col-xl-6">
+                                <label for="addressEdit">Address</label>
+                                <input type="text" id="addressEdit" name="addressEdit" class="form-control">
+                            </div>
+                        </div>
+
+                    </form>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" id="btnSaveUser" class="btn btn-primary">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</th:block>
+
+<th:block th:fragment="modal_create_product">
+    <div id="mdCreateProduct" class="modal" tabindex="-1" data-backdrop="static" data-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Create Product</h5>
+                </div>
+                <div class="modal-body">
+
+                    <div class="modal-alert-danger hide">
+                    </div>
+
+                    <form class="mb-3" id="frmCreateProduct">
+                        <div class="row mb-3">
+                            <div class="col-xl-8">
+                                <label for="nameCreate">Product Name</label>
+                                <input type="text" id="nameCreate" name="nameCreate" class="form-control">
+                            </div>
+                            <div class="col-xl-4">
+                                <label for="categoryCreate">Category</label>
+                                <select id="categoryCreate" name="categoryCreate" class="form-control">
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-xl-4">
+                                <label for="priceCreate">Price</label>
+                                <input type="number" id="priceCreate" name="priceCreate" class="form-control">
+                            </div>
+                            <div class="col-xl-4">
+                                <label for="quantityCreate">Quantity</label>
+                                <input type="number" id="quantityCreate" name="quantityCreate" class="form-control">
+                            </div>
+                            <div class="col-xl-4">
+                                <label for="ownerCreate">Owner</label>
+                                <input type="text" id="ownerCreate" name="ownerCreate" class="form-control" readonly>
+                            </div>
+                        </div>
+
+                    </form>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" id="btnCreateProduct" class="btn btn-primary">Create</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</th:block>
+
+<th:block th:fragment="modal_edit_product">
+    <div id="mdEditProduct" class="modal" tabindex="-1" data-backdrop="static" data-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Product</h5>
+                </div>
+                <div class="modal-body">
+
+                    <div class="modal-alert-danger hide">
+                    </div>
+
+                    <form class="mb-3" id="frmEditProduct">
+                        <div class="row mb-3">
+                            <div class="col-xl-8">
+                                <label for="nameEdit">Product Name</label>
+                                <input type="text" id="nameEdit" name="nameEdit" class="form-control">
+                            </div>
+                            <div class="col-xl-4">
+                                <label for="categoryEdit">Category</label>
+                                <select id="categoryEdit" name="categoryEdit" class="form-control">
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-xl-4">
+                                <label for="priceEdit">Price</label>
+                                <input type="number" id="priceEdit" name="priceEdit" class="form-control">
+                            </div>
+                            <div class="col-xl-4">
+                                <label for="quantityEdit">Quantity</label>
+                                <input type="number" id="quantityEdit" name="quantityEdit" class="form-control">
+                            </div>
+                            <div class="col-xl-4">
+                                <label for="ownerEdit">Owner</label>
+                                <input type="text" id="ownerEdit" name="ownerEdit" class="form-control" readonly>
+                            </div>
+                        </div>
+
+                    </form>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" id="btnSaveProduct" class="btn btn-primary">Create</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</th:block>

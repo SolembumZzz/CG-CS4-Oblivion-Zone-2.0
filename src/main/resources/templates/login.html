@@ -1,0 +1,193 @@
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <th:block th:replace="/layout/login/head :: head"/>
+    <title>Sign In/Sign Up form</title>
+</head>
+
+<body>
+
+<div class="container right-panel-active">
+    <!-- Sign Up -->
+    <div class="container__form container--signup">
+        <form class="form" id="frmSignIn">
+            <h2 class="form__title">Sign In</h2>
+            <input type="text" placeholder="Username" class="input" id="usernameIn"/>
+            <input type="password" placeholder="Password" class="input" id="passwordIn"/>
+            <a href="#" class="link">Forgot your password?</a>
+            <button class="btn" id="btnSignIn">Sign In</button>
+        </form>
+    </div>
+
+    <!-- Sign In -->
+    <div class="container__form container--signin">
+        <form class="form" id="frmSignUp">
+            <h2 class="form__title">Sign Up</h2>
+            <select class="select" id="roleUp" disabled>
+                <option value="1">ADMIN</option>
+                <option value="2">USER</option>
+            </select>
+            <input type="text" placeholder="User" class="input" id="usernameUp" name="usernameUp" disabled/>
+            <input type="password" placeholder="Password" class="input" id="passwordUp" name="passwordUp" disabled/>
+            <button type="submit" class="btn" id="btnSignUp">Sign Up</button>
+        </form>
+    </div>
+
+    <!-- Overlay -->
+    <div class="container__overlay">
+        <div class="overlay">
+            <div class="overlay__panel overlay--right">
+                <button class="btn" id="signIn">Sign In</button>
+            </div>
+            <div class="overlay__panel overlay--left">
+                <button class="btn" id="signUp">Sign Up</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<th:block th:replace="/layout/login/script :: script"/>
+
+<script>
+    let page = {
+        urls: {
+            register: App.BASE_URL_AUTHORIZATION + "/register",
+            login: App.BASE_URL_AUTHORIZATION + "/login",
+        },
+        element: {},
+        commands: {},
+        dialogs: {
+            element: {},
+            alertDanger: {},
+            inputError: {}
+        }
+    }
+
+    page.element.btnSignUpOverlay = $("#signUp");
+    page.dialogs.element.frmSignUp = $("#frmSignUp");
+    page.element.btnSignUp = $("#btnSignUp");
+    page.dialogs.element.usernameUp = $("#usernameUp");
+    page.dialogs.element.passwordUp = $("#passwordUp");
+    page.dialogs.element.roleUp = $("#roleUp");
+
+    page.element.btnSignInOverlay = $("#signIn");
+    page.dialogs.element.frmSignIn = $("#frmSignIn");
+    page.element.btnSignIn = $("#btnSignIn");
+    page.dialogs.element.usernameIn = $("#usernameIn");
+    page.dialogs.element.passwordIn = $("#passwordIn");
+
+
+    let user = new User();
+    let product = new Product();
+
+    page.dialogs.element.frmSignUp.validate({
+        onkeyup: function (element) {
+            $(element).valid()
+        },
+        onclick: false,
+        onfocusout: false,
+        rules: {
+            usernameUp: {
+                required: true,
+                minlength: 5,
+                maxlength: 20
+            },
+            passwordUp: {
+                required: true,
+                minlength: 5,
+                maxlength: 30,
+            }
+        },
+        messages: {
+            usernameUp: {
+                required: "Please enter your username",
+                minlength: $.validator.format("Username must have at least {0} characters"),
+                maxlength: $.validator.format("Username must have at most {0} characters")
+            },
+            passwordUp: {
+                required: "Please enter your password",
+                minlength: $.validator.format("Password must have at least {0} characters"),
+                maxlength: $.validator.format("Password must have at most {0} characters")
+            }
+        },
+        submitHandler: function () {
+            doSignUp();
+        }
+    });
+
+    function doSignUp() {
+        user = {
+            username: page.dialogs.element.usernameUp.val(),
+            password: page.dialogs.element.passwordUp.val(),
+            role: {
+                id: page.dialogs.element.roleUp.val(),
+            }
+        }
+
+        $.ajax({
+            "headers": {
+                "accept": "application/json",
+                "content-type": "application/json"
+            },
+            "type": "POST",
+            "url": page.urls.register,
+            "data": JSON.stringify(user)
+        })
+            .done(() => {
+                App.IziToast.showSuccessAlert("Account registered!");
+                setTimeout(() => {
+                    page.element.btnSignInOverlay.click();
+                }, 500)
+            })
+            .fail((jqXHR) => {
+                App.IziToast.showErrorAlert(jqXHR.responseJSON.message);
+            })
+    }
+
+    page.element.btnSignIn.on("click", function () {
+        user = {
+            username: page.dialogs.element.usernameIn.val(),
+            password: page.dialogs.element.passwordIn.val(),
+        }
+
+        $.ajax({
+            "headers": {
+                "accept": "application/json",
+                "content-type": "application/json"
+            },
+            "type": "POST",
+            "url": page.urls.login,
+            "data": JSON.stringify(user)
+        })
+            .done(() => {
+                App.IziToast.showSuccessAlert("Logging in...");
+                setTimeout(() => {
+                    location.href = "/dashboard";
+                }, 800)
+            })
+            .fail(() => {
+                App.IziToast.showErrorAlert("Login failed");
+            })
+    })
+
+    page.element.btnSignUpOverlay.on("click", function () {
+        page.dialogs.element.usernameUp.removeAttr("disabled");
+        page.dialogs.element.passwordUp.removeAttr("disabled");
+        page.dialogs.element.roleUp.removeAttr("disabled");
+
+        page.dialogs.element.usernameIn.val('').attr("disabled", "disabled");
+        page.dialogs.element.passwordIn.val('').attr("disabled", "disabled");
+    })
+
+    page.element.btnSignInOverlay.on("click", function () {
+        page.dialogs.element.usernameIn.removeAttr("disabled");
+        page.dialogs.element.passwordIn.removeAttr("disabled");
+
+        page.dialogs.element.usernameUp.val('').attr("disabled", "disabled");
+        page.dialogs.element.passwordUp.val('').attr("disabled", "disabled");
+        page.dialogs.element.roleUp.prop("selectedIndex", 0).attr("disabled", "disabled");
+    })
+</script>
+
+</body>
+
+</html>

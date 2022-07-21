@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <title>Admin Dashboard</title>
+    <th:block th:replace="/layout/dashboard/head :: head"/>
+</head>
+<body data-layout="horizontal">
+<div id="wrapper">
+    <header id="topnav">
+        <div class="navbar-custom" th:insert="/layout/dashboard/navbar-custom :: navbar-custom"></div>
+        <div class="topbar-menu" th:insert="/layout/dashboard/topbar-menu :: topbar-menu"></div>
+    </header>
+
+    <!-- ============================================================== -->
+    <!-- PAGE CONTENT -->
+    <!-- ============================================================== -->
+
+    <div class="content-page">
+        <div class="content">
+
+            <!-- PAGE TITLE -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="page-title-box">
+                        <h4 class="page-title">Products</h4>
+                    </div>
+                </div>
+            </div>
+            <!-- END PAGE TITLE -->
+
+            <div class="row">
+                <div class="col-sm-12">
+                    <div class="card-box table-responsive">
+                        <div class="row">
+                            <div class="col-10">
+                                <h4 class="header-title"><b>All Products</b></h4>
+                                <p class="sub-header">
+                                    This list includes all products including locked ones.
+                                    Only authorized users can interact with these data.
+                                </p>
+                            </div>
+
+                            <div class="col-2">
+                                <div style="color: #FFFFFF; float: right">
+                                    <button class="btn btn-primary waves-effect width-md waves-light"
+                                            id="btnMdCreateProduct">
+                                        <i class="fa-solid fa-plus"></i>
+                                        Add product
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <table id="datatable-keytable" class="table table-bordered dt-responsive nowrap"
+                               style="border-collapse: collapse; border-spacing: 0; width: 100%;">
+                            <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Product Name</th>
+                                <th>Price</th>
+                                <th>Quantity</th>
+                                <th>Owner</th>
+                                <th>Category</th>
+                                <th>Status</th>
+                                <th class="text-center" id="action">Action</th>
+                            </tr>
+                            </thead>
+
+                            <tbody id="tb-productlist">
+
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        <!-- end content -->
+
+        <footer class="footer" th:insert="/layout/dashboard/footer :: footer">
+        </footer>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- END PAGE CONTENT -->
+    <!-- ============================================================== -->
+
+</div>
+
+<th:block th:replace="/layout/dashboard/modals :: modal_create_product"/>
+<th:block th:replace="/layout/dashboard/modals :: modal_edit_product"/>
+
+<th:block th:replace="/layout/dashboard/script :: script"/>
+
+<script>
+    let page = {
+        urls: {
+            findAllProducts: App.BASE_URL_DASHBOARD + "/products",
+            findOneProduct: App.BASE_URL_DASHBOARD + "/product/",
+            getCategories: App.BASE_URL_DASHBOARD + "/categories",
+            createProduct: App.BASE_URL_DASHBOARD + "/product/create",
+            editProduct: App.BASE_URL_DASHBOARD + "/product/edit/",
+            lockProduct: App.BASE_URL_DASHBOARD + "/product/lock/",
+            unlockProduct: App.BASE_URL_DASHBOARD + "/product/unlock/",
+            getCurrentUserName: App.BASE_URL_DASHBOARD + "/currentUsername",
+        },
+        element: {},
+        commands: {},
+        dialogs: {
+            element: {},
+            alertDanger: {},
+            inputError: {}
+        }
+    }
+
+    page.element.tbBodyProduct = $("#tb-productlist");
+
+    page.element.btnShowCreateProductFrm = $("#btnMdCreateProduct");
+
+    page.dialogs.element.mdCreateProduct = $("#mdCreateProduct");
+    page.dialogs.element.mdEditProduct = $("#mdEditProduct");
+
+    page.dialogs.element.frmCreateProduct = $("#frmCreateProduct");
+    page.dialogs.element.nameCreate = $("#nameCreate");
+    page.dialogs.element.categoryCreate = $("#categoryCreate");
+    page.dialogs.element.priceCreate = $("#priceCreate");
+    page.dialogs.element.quantityCreate = $("#quantityCreate");
+    page.dialogs.element.ownerCreate = $("#ownerCreate");
+
+    page.dialogs.element.frmEditProduct = $("#frmEditProduct");
+    page.dialogs.element.nameEdit = $("#nameEdit");
+    page.dialogs.element.categoryEdit = $("#categoryEdit");
+    page.dialogs.element.priceEdit = $("#priceEdit");
+    page.dialogs.element.quantityEdit = $("#quantityEdit");
+    page.dialogs.element.ownerEdit = $("#ownerEdit");
+
+    page.dialogs.element.btnCreateProduct = $("#btnCreateProduct");
+    page.dialogs.element.btnSaveProduct = $("#btnSaveProduct");
+
+    page.dialogs.alertDanger.mdCreateProduct = $("#mdCreateProduct .modal-body .modal-alert-danger");
+    page.dialogs.alertDanger.mdEditProduct = $("#mdEditProduct .modal-body .modal-alert-danger");
+
+    page.dialogs.inputError.frmCreateProduct = $("#frmCreateProduct input.error")
+    page.dialogs.inputError.frmEditProduct = $("#frmEditProduct input.error")
+
+    let product = new Product();
+    let category = new Category();
+    let categories = [];
+    let currentUsername;
+
+    function renderProducts() {
+        $.ajax({
+            "type": "GET",
+            "url": page.urls.findAllProducts
+        })
+            .done((data) => {
+                data.forEach(item => {
+                    product = item;
+                    prependRow();
+                })
+
+                handleBtn();
+            })
+    }
+
+    // open modal
+    function handleCreateProduct() {
+        page.element.btnShowCreateProductFrm.on("click", function () {
+            page.dialogs.element.ownerCreate.val(currentUsername);
+            page.dialogs.element.mdCreateProduct.modal("show");
+        })
+    }
+
+    function handleEditProduct() {
+        $(".btnEdit").on("click", function () {
+            page.dialogs.element.ownerEdit.val(currentUsername);
+            let id = $(this).data("id");
+
+            selectProduct(id).then(function () {
+                page.dialogs.element.nameEdit.val(product.name);
+                page.dialogs.element.categoryEdit.val(product.category.id);
+                page.dialogs.element.priceEdit.val(product.price);
+                page.dialogs.element.quantityEdit.val(product.quantity);
+            })
+
+            page.dialogs.element.mdEditProduct.modal("show");
+        })
+    }
+
+    function handleLockProduct() {
+        $(".btnLockProduct").on("click", function () {
+            let id = $(this).data("id");
+
+            selectProduct(id).then(function () {
+                App.SweetAlert.showLockConfirmDialog()
+                    .then((result) => {
+                        if (result.isConfirmed)
+                            doLock();
+                    });
+            })
+        })
+    }
+
+    function handleUnlockProduct() {
+        $(".btnUnlockProduct").on("click", function () {
+            let id = $(this).data("id");
+
+            selectProduct(id).then(function () {
+                App.SweetAlert.showUnlockConfirmDialog()
+                    .then((result) => {
+                        if (result.isConfirmed)
+                            doUnlock();
+                    });
+            })
+        })
+    }
+
+    function handleBtn() {
+        handleEditProduct();
+        handleLockProduct();
+        handleUnlockProduct();
+    }
+
+    // reset modal
+    page.dialogs.element.mdCreateProduct.on("hidden.bs.modal", function () {
+        page.dialogs.element.frmCreateProduct[0].reset();
+        createProductValidator.resetForm();
+        page.dialogs.alertDanger.mdCreateProduct.removeClass("show").addClass("hide");
+        $("#mdCreateProduct input").removeClass("error");
+    })
+
+    page.dialogs.element.mdEditProduct.on("hidden.bs.modal", function () {
+        page.dialogs.element.frmEditProduct[0].reset();
+        editProductValidator.resetForm();
+        page.dialogs.alertDanger.mdEditProduct.removeClass("show").addClass("hide");
+        $("#mdEditProduct input").removeClass("error");
+    })
+
+    // action
+    page.dialogs.element.btnCreateProduct.on("click", function () {
+        page.dialogs.element.frmCreateProduct.submit();
+    })
+
+    function doCreate() {
+        delete product.id;
+        product.name = page.dialogs.element.nameCreate.val();
+        product.price = page.dialogs.element.priceCreate.val();
+        product.quantity = page.dialogs.element.quantityCreate.val();
+
+        category.id = page.dialogs.element.categoryCreate.val();
+        product.category = category;
+
+        $.ajax({
+            "headers": {
+                "accept": "application/json",
+                "content-type": "application/json"
+            },
+            "type": "POST",
+            "url": page.urls.createProduct,
+            "data": JSON.stringify(product)
+        })
+            .done((data) => {
+                product = data;
+                prependRow();
+
+                page.dialogs.element.frmCreateProduct[0].reset();
+                page.dialogs.element.mdCreateProduct.modal("hide");
+                handleBtn();
+                App.SweetAlert.showSuccessAlert(App.SUCCESS_CREATED);
+            })
+            .fail(function (jqXHR) {
+                handleFailedTasks(jqXHR, "Create");
+            })
+    }
+
+    page.dialogs.element.btnSaveProduct.on("click", function () {
+        page.dialogs.element.frmEditProduct.submit();
+    })
+
+    function doEdit() {
+        product.name = page.dialogs.element.nameEdit.val();
+        product.price = page.dialogs.element.priceEdit.val();
+        product.quantity = page.dialogs.element.quantityEdit.val();
+
+        category.id = page.dialogs.element.categoryEdit.val();
+        product.category = category;
+
+        $.ajax({
+            "headers": {
+                "accept": "application/json",
+                "content-type": "application/json"
+            },
+            "type": "PATCH",
+            "url": page.urls.editProduct + product.id,
+            "data": JSON.stringify(product)
+        })
+            .done((data) => {
+                product = data;
+                replaceRow();
+
+                page.dialogs.element.frmEditProduct[0].reset();
+                page.dialogs.element.mdEditProduct.modal("hide");
+                handleBtn();
+                App.SweetAlert.showSuccessAlert(App.SUCCESS_UPDATED);
+            })
+            .fail(function (jqXHR) {
+                handleFailedTasks(jqXHR, "Edit");
+            })
+    }
+
+    function doLock() {
+        return $.ajax({
+            "headers": {
+                "accept": "application/json",
+                "content-type": "application/json"
+            },
+            "type": "PATCH",
+            "url": page.urls.lockProduct + product.id,
+        })
+            .done((data) => {
+                product = data;
+                replaceRow();
+
+                handleBtn();
+                App.SweetAlert.showSuccessAlert("Product locked");
+            })
+            .fail((jqXHR) => {
+                handleFailedTasks(jqXHR, "Lock");
+            })
+    }
+
+    function doUnlock() {
+        return $.ajax({
+            headers: {
+                "accept": "application/json",
+                "content-type": "application/json"
+            },
+            type: "PATCH",
+            url: page.urls.unlockProduct + product.id,
+        })
+            .done((data) => {
+                product = data;
+                replaceRow();
+
+                handleBtn();
+                App.SweetAlert.showSuccessAlert("Product unlocked");
+            })
+            .fail((jqXHR) => {
+                handleFailedTasks(jqXHR, "Lock");
+            })
+    }
+
+    // validation
+    const createProductValidator = page.dialogs.element.frmCreateProduct.validate({
+        onkeyup: function (element) {
+            $(element).valid()
+        },
+        onclick: false,
+        onfocusout: false,
+        rules: {
+            nameCreate: {
+                required: true,
+                minlength: 5,
+                maxlength: 30
+            },
+            priceCreate: {
+                required: true,
+                min: 0,
+                max: 1000000000
+            },
+            quantityCreate: {
+                required: true,
+                min: 0,
+                max: 5000000
+            }
+        },
+        messages: {
+            nameCreate: {
+                required: "Product name is required",
+                minlength: $.validator.format("Product name must have at least {0} characters"),
+                maxlength: $.validator.format("Product name must have at most {0} characters")
+            },
+            priceCreate: {
+                required: "Price is required",
+                min: $.validator.format("Price must be at least {0}"),
+                max: $.validator.format("Price can be at most {0}")
+            },
+            quantityCreate: {
+                required: "Quantity is required",
+                min: "Quantity must be at least {0}",
+                max: "Quantity must be at least {0}"
+            }
+        },
+        errorLabelContainer: "#mdCreateProduct .modal-body .modal-alert-danger",
+        errorPlacement: function (error, element) {
+            error.appendTo("#mdCreateProduct .modal-body .modal-alert-danger");
+        },
+        showErrors: function (errorMap, errorList) {
+            if (this.numberOfInvalids() > 0) {
+                page.dialogs.alertDanger.mdCreateProduct.removeClass("hide").addClass("show");
+            } else {
+                page.dialogs.alertDanger.mdCreateProduct.removeClass("show").addClass("hide").empty();
+                page.dialogs.inputError.frmCreateProduct.removeClass("error");
+            }
+            this.defaultShowErrors();
+        },
+        submitHandler: function () {
+            doCreate();
+        }
+    });
+
+    const editProductValidator = page.dialogs.element.frmEditProduct.validate({
+        onkeyup: function (element) {
+            $(element).valid()
+        },
+        onclick: false,
+        onfocusout: false,
+        rules: {
+            nameEdit: {
+                required: true,
+                minlength: 5,
+                maxlength: 30
+            },
+            priceEdit: {
+                required: true,
+                min: 0,
+                max: 1000000000
+            },
+            quantityEdit: {
+                required: true,
+                min: 0,
+                max: 5000000
+            }
+        },
+        messages: {
+            nameEdit: {
+                required: "Product name is required",
+                minlength: $.validator.format("Product name must have at least {0} characters"),
+                maxlength: $.validator.format("Product name must have at most {0} characters")
+            },
+            priceEdit: {
+                required: "Price is required",
+                min: $.validator.format("Price must be at least {0}"),
+                max: $.validator.format("Price can be at most {0}")
+            },
+            quantityEdit: {
+                required: "Quantity is required",
+                min: "Quantity must be at least {0}",
+                max: "Quantity must be at least {0}"
+            }
+        },
+        errorLabelContainer: "#mdEditProduct .modal-body .modal-alert-danger",
+        errorPlacement: function (error, element) {
+            error.appendTo("#mdEditProduct .modal-body .modal-alert-danger");
+        },
+        showErrors: function (errorMap, errorList) {
+            if (this.numberOfInvalids() > 0) {
+                page.dialogs.alertDanger.mdEditProduct.removeClass("hide").addClass("show");
+            } else {
+                page.dialogs.alertDanger.mdEditProduct.removeClass("show").addClass("hide").empty();
+                page.dialogs.inputError.frmEditProduct.removeClass("error");
+            }
+            this.defaultShowErrors();
+        },
+        submitHandler: function () {
+            doEdit();
+        }
+    })
+
+    // misc
+    function selectProduct(id) {
+        return $.ajax({
+            type: "GET",
+            url: page.urls.findOneProduct + id,
+        })
+            .done((data) => {
+                product = data;
+            })
+            .fail((jqXHR) => {
+                if (jqXHR.status === 403) {
+                    App.SweetAlert.showErrorAlert(App.ERROR_403);
+                } else {
+                    App.IziToast.showErrorAlert(App.ERROR_404);
+                }
+            })
+    }
+
+    function getCategories() {
+        $.ajax({
+            type: "GET",
+            url: page.urls.getCategories,
+        })
+            .done((data) => {
+                categories = data;
+                let str = ``;
+                $.each(categories, (i, category) => {
+                    str += `<option value="${category.id}">${category.name}</option>`;
+                })
+
+                page.dialogs.element.categoryCreate.empty().prepend(str);
+                page.dialogs.element.categoryEdit.empty().prepend(str);
+            })
+            .fail(() => {
+                App.IziToast.showErrorAlert(App.ERROR_404);
+            })
+    }
+
+    function getCurrentUsername() {
+        $.ajax({
+            type: "GET",
+            url: page.urls.getCurrentUserName,
+        })
+            .done((data) => {
+                currentUsername = data;
+            })
+    }
+
+    function prependRow() {
+        let str = `
+            <tr id="tr_${product.id}">
+                <td class="text-center">${product.id}</td>
+                <td>${product.name}</td>
+                <td class="text-right">${product.price}</td>
+                <td class="text-right">${product.quantity}</td>
+                <td class="text-center">${product.createdBy.username}</td>
+                <td class="text-center">${product.category.name}</td>
+                <td class="text-center">${(product.locked) ? "Locked" : "Active"}</td>
+                <td class="text-center">
+                    <btn data-id="${product.id}" class="btnEdit btn btn-outline-secondary waves-effect waves-light" title="Edit">
+                        <i class="fas fa-pen"></i>
+                    </btn>
+                    <a data-id="${product.id}" title="${(product.locked) ? 'Lock' : 'Unlock'}"
+                    class="${(product.locked) ? 'btnUnlockProduct' : 'btnLockProduct'} btn btn-outline-danger waves-effect waves-light">
+                       <i class="${(product.locked) ? 'fas fa-unlock' : 'fas fa-lock'}"></i>
+                    </a>
+                </td>
+            </tr>`;
+
+        page.element.tbBodyProduct.prepend(str);
+    }
+
+    function replaceRow() {
+        let targetRow = $('#tr_' + product.id);
+        let str = `
+            <tr id="tr_${product.id}">
+                <td class="text-center">${product.id}</td>
+                <td>${product.name}</td>
+                <td class="text-right">${product.price}</td>
+                <td class="text-right">${product.quantity}</td>
+                <td class="text-center">${product.createdBy.username}</td>
+                <td class="text-center">${product.category.name}</td>
+                <td class="text-center">${(product.locked) ? "Locked" : "Active"}</td>
+                <td class="text-center">
+                    <btn data-id="${product.id}" class="btnEdit btn btn-outline-secondary waves-effect waves-light" title="Edit">
+                        <i class="fas fa-pen"></i>
+                    </btn>
+                    <a data-id="${product.id}" title="${(product.locked) ? 'Lock' : 'Unlock'}"
+                    class="${(product.locked) ? 'btnUnlockProduct' : 'btnLockProduct'} btn btn-outline-danger waves-effect waves-light">
+                       <i class="${(product.locked) ? 'fas fa-unlock' : 'fas fa-lock'}"></i>
+                    </a>
+                </td>
+            </tr>`;
+
+        targetRow.replaceWith(str);
+    }
+
+    function handleFailedTasks(jqXHR, modal) {
+        let str = ``;
+
+        if (jqXHR.status === 401) {
+            App.SweetAlert.showErrorAlert(App.ERROR_401);
+            setTimeout(() => {
+                location.href = "/logout";
+            }, 2000);
+
+        } else if (jqXHR.status === 403) {
+            App.SweetAlert.showErrorAlert(App.ERROR_403);
+
+        } else if (jqXHR.responseJSON) {
+            if (jqXHR.responseJSON.message) {
+                App.SweetAlert.showErrorAlert(jqXHR.responseJSON.message);
+
+            } else {
+                $.each(jqXHR.responseJSON, function (key, value) {
+                    str += `<label id="${key}-error" class="error" for="${key + modal}">${value}</label>`;
+                    $("#" + key).addClass("error");
+                });
+
+                // page.dialogs.alertDanger.mdCreateProduct
+                $("#md" + modal + "Product .modal-body .modal-alert-danger")
+                    .addClass('show')
+                    .append(str);
+            }
+
+        } else {
+            App.SweetAlert.showErrorAlert(App.ERROR_500);
+        }
+
+        // if (!jqXHR.responseJSON) {
+        //     App.IziToast.showErrorAlert(jqXHR.responseText);
+        // } else {
+        //     let str = ``;
+        //     $.each(jqXHR.responseJSON, (key, value) => {
+        //         str += `<label id=${key}Create-error class="error" for="${key}Create">${value}</label>`;
+        //         $("#" + key + "Create").addClass("error");
+        //     })
+        //
+        //     page.dialogs.alertDanger.mdCreateProduct
+        //         .addClass('show')
+        //         .append(str);
+        // }
+    }
+
+    //initialization
+    renderProducts();
+
+    getCategories();
+    getCurrentUsername();
+
+    handleCreateProduct();
+</script>
+</body>
+
+</html>

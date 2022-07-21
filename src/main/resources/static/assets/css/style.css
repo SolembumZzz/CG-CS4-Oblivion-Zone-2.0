@@ -1,0 +1,34 @@
+table tbody tr:hover {
+    background-color: lightgray;
+}
+
+table thead tr {
+    background-color: #4caf50;
+    color: white;
+}
+
+.modal-alert-danger {
+    padding: 10px 35px;
+    margin-bottom: 15px;
+    color: #842029;
+    background-color: #f8d7da;
+    border-color: #f5c2c7;
+}
+
+.show {
+    display: block !important;
+}
+
+.hide  {
+    display: none;
+}
+
+label.error {
+    display: list-item;
+    margin: 0 0 5px 20px;
+    color: red;
+}
+
+input.error {
+    border-color: red;
+}
